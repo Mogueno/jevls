@@ -1,0 +1,443 @@
+{
+  "javascript:3311e755": {
+    "model": "jev-1.13.0",
+    "latencyMs": 194,
+    "inputTokens": 1535,
+    "health": {
+      "score": 4,
+      "label": "Critical",
+      "confidence": 1,
+      "probabilities": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 1
+      }
+    },
+    "category": {
+      "choice": "security",
+      "confidence": 0.62,
+      "probabilities": {
+        "performance": 0,
+        "smell": 0,
+        "clean": 0,
+        "bug": 0,
+        "types": 0,
+        "secret": 0.33,
+        "security": 0.67
+      }
+    },
+    "gauges": [
+      {
+        "id": "security",
+        "label": "Security issue",
+        "hint": "XSS, injection, eval, auth bypass",
+        "value": 0.99
+      },
+      {
+        "id": "bug",
+        "label": "Logic bug",
+        "hint": "Wrong result, crash, race, stale state",
+        "value": 0.76
+      },
+      {
+        "id": "secret",
+        "label": "Secret in source",
+        "hint": "Token, password, or API key in the snippet",
+        "value": 0.99
+      },
+      {
+        "id": "ready",
+        "label": "Safe to ship",
+        "hint": "Probability this snippet is fine as-is",
+        "value": 0.01
+      }
+    ],
+    "findings": [
+      {
+        "id": "b1",
+        "blockId": "b1",
+        "startLine": 5,
+        "endLine": 14,
+        "severity": "error",
+        "category": "security",
+        "title": "Security",
+        "detail": "Possible XSS, injection, eval of untrusted input, or auth bypass.",
+        "score": 3.99,
+        "confidence": 0.7,
+        "probabilities": {
+          "performance": 0,
+          "smell": 0,
+          "clean": 0,
+          "security": 0.75,
+          "types": 0,
+          "secret": 0.25,
+          "bug": 0
+        }
+      },
+      {
+        "id": "b0",
+        "blockId": "b0",
+        "startLine": 1,
+        "endLine": 4,
+        "severity": "warning",
+        "category": "security",
+        "title": "Security",
+        "detail": "Possible XSS, injection, eval of untrusted input, or auth bypass.",
+        "score": 2,
+        "confidence": 0.73,
+        "probabilities": {
+          "performance": 0,
+          "smell": 0.03,
+          "clean": 0.08,
+          "security": 0.77,
+          "types": 0.07,
+          "secret": 0,
+          "bug": 0.05
+        }
+      }
+    ],
+    "blockCount": 2
+  },
+  "python:47eee8d1": {
+    "model": "jev-1.13.0",
+    "latencyMs": 124,
+    "inputTokens": 1111,
+    "health": {
+      "score": 4,
+      "label": "Critical",
+      "confidence": 1,
+      "probabilities": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 1
+      }
+    },
+    "category": {
+      "choice": "security",
+      "confidence": 0.83,
+      "probabilities": {
+        "bug": 0,
+        "secret": 0.15,
+        "clean": 0,
+        "types": 0,
+        "performance": 0,
+        "security": 0.85,
+        "smell": 0
+      }
+    },
+    "gauges": [
+      {
+        "id": "security",
+        "label": "Security issue",
+        "hint": "XSS, injection, eval, auth bypass",
+        "value": 0.99
+      },
+      {
+        "id": "bug",
+        "label": "Logic bug",
+        "hint": "Wrong result, crash, race, stale state",
+        "value": 0.79
+      },
+      {
+        "id": "secret",
+        "label": "Secret in source",
+        "hint": "Token, password, or API key in the snippet",
+        "value": 0.99
+      },
+      {
+        "id": "ready",
+        "label": "Safe to ship",
+        "hint": "Probability this snippet is fine as-is",
+        "value": 0.01
+      }
+    ],
+    "findings": [
+      {
+        "id": "b0",
+        "blockId": "b0",
+        "startLine": 1,
+        "endLine": 6,
+        "severity": "error",
+        "category": "security",
+        "title": "Security",
+        "detail": "Possible XSS, injection, eval of untrusted input, or auth bypass.",
+        "score": 3.99,
+        "confidence": 0.81,
+        "probabilities": {
+          "bug": 0,
+          "secret": 0.16,
+          "clean": 0,
+          "types": 0,
+          "performance": 0,
+          "security": 0.84,
+          "smell": 0
+        }
+      }
+    ],
+    "blockCount": 1
+  },
+  "javascript:0840943c": {
+    "model": "jev-1.13.0",
+    "latencyMs": 137,
+    "inputTokens": 1889,
+    "health": {
+      "score": 3.99,
+      "label": "Critical",
+      "confidence": 0.99,
+      "probabilities": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0.01,
+        "4": 0.99
+      }
+    },
+    "category": {
+      "choice": "secret",
+      "confidence": 1,
+      "probabilities": {
+        "performance": 0,
+        "bug": 0,
+        "types": 0,
+        "security": 0,
+        "secret": 1,
+        "smell": 0,
+        "clean": 0
+      }
+    },
+    "gauges": [
+      {
+        "id": "security",
+        "label": "Security issue",
+        "hint": "XSS, injection, eval, auth bypass",
+        "value": 0.96
+      },
+      {
+        "id": "bug",
+        "label": "Logic bug",
+        "hint": "Wrong result, crash, race, stale state",
+        "value": 0.43
+      },
+      {
+        "id": "secret",
+        "label": "Secret in source",
+        "hint": "Token, password, or API key in the snippet",
+        "value": 0.99
+      },
+      {
+        "id": "ready",
+        "label": "Safe to ship",
+        "hint": "Probability this snippet is fine as-is",
+        "value": 0.01
+      }
+    ],
+    "findings": [
+      {
+        "id": "b1",
+        "blockId": "b1",
+        "startLine": 4,
+        "endLine": 9,
+        "severity": "error",
+        "category": "secret",
+        "title": "Secret",
+        "detail": "Credential, token, or secret may be in source.",
+        "score": 3.88,
+        "confidence": 1,
+        "probabilities": {
+          "smell": 0,
+          "bug": 0,
+          "types": 0,
+          "security": 0,
+          "secret": 1,
+          "performance": 0,
+          "clean": 0
+        }
+      },
+      {
+        "id": "b2",
+        "blockId": "b2",
+        "startLine": 10,
+        "endLine": 18,
+        "severity": "warning",
+        "category": "secret",
+        "title": "Secret",
+        "detail": "Credential, token, or secret may be in source.",
+        "score": 2.68,
+        "confidence": 0.98,
+        "probabilities": {
+          "performance": 0,
+          "bug": 0,
+          "types": 0,
+          "security": 0,
+          "secret": 0.99,
+          "smell": 0.01,
+          "clean": 0
+        }
+      }
+    ],
+    "blockCount": 3
+  },
+  "typescript:44d85098": {
+    "model": "jev-1.13.0",
+    "latencyMs": 115,
+    "inputTokens": 1801,
+    "health": {
+      "score": 2.42,
+      "label": "Warning",
+      "confidence": 0.52,
+      "probabilities": {
+        "0": 0.01,
+        "1": 0.08,
+        "2": 0.38,
+        "3": 0.53,
+        "4": 0
+      }
+    },
+    "category": {
+      "choice": "bug",
+      "confidence": 0.68,
+      "probabilities": {
+        "smell": 0.25,
+        "types": 0.01,
+        "performance": 0,
+        "clean": 0,
+        "security": 0,
+        "secret": 0,
+        "bug": 0.74
+      }
+    },
+    "gauges": [
+      {
+        "id": "security",
+        "label": "Security issue",
+        "hint": "XSS, injection, eval, auth bypass",
+        "value": 0.04
+      },
+      {
+        "id": "bug",
+        "label": "Logic bug",
+        "hint": "Wrong result, crash, race, stale state",
+        "value": 0.84
+      },
+      {
+        "id": "secret",
+        "label": "Secret in source",
+        "hint": "Token, password, or API key in the snippet",
+        "value": 0.01
+      },
+      {
+        "id": "ready",
+        "label": "Safe to ship",
+        "hint": "Probability this snippet is fine as-is",
+        "value": 0.27
+      }
+    ],
+    "findings": [
+      {
+        "id": "b1",
+        "blockId": "b1",
+        "startLine": 6,
+        "endLine": 9,
+        "severity": "info",
+        "category": "bug",
+        "title": "Bug",
+        "detail": "Likely logic error, crash, race, or wrong result.",
+        "score": 1.72,
+        "confidence": 0.66,
+        "probabilities": {
+          "smell": 0.15,
+          "types": 0,
+          "performance": 0.02,
+          "clean": 0.12,
+          "security": 0,
+          "secret": 0,
+          "bug": 0.71
+        }
+      },
+      {
+        "id": "b2",
+        "blockId": "b2",
+        "startLine": 10,
+        "endLine": 16,
+        "severity": "info",
+        "category": "bug",
+        "title": "Bug",
+        "detail": "Likely logic error, crash, race, or wrong result.",
+        "score": 1.03,
+        "confidence": 0.39,
+        "probabilities": {
+          "security": 0,
+          "types": 0.01,
+          "performance": 0,
+          "clean": 0.22,
+          "smell": 0.28,
+          "secret": 0,
+          "bug": 0.49
+        }
+      }
+    ],
+    "blockCount": 3
+  },
+  "typescript:61c8388a": {
+    "model": "jev-1.13.0",
+    "latencyMs": 187,
+    "inputTokens": 1153,
+    "health": {
+      "score": 0.21,
+      "label": "Clean",
+      "confidence": 0.82,
+      "probabilities": {
+        "0": 0.81,
+        "1": 0.18,
+        "2": 0.01,
+        "3": 0,
+        "4": 0
+      }
+    },
+    "category": {
+      "choice": "clean",
+      "confidence": 0.96,
+      "probabilities": {
+        "types": 0.01,
+        "smell": 0.01,
+        "security": 0,
+        "bug": 0.01,
+        "clean": 0.97,
+        "secret": 0,
+        "performance": 0
+      }
+    },
+    "gauges": [
+      {
+        "id": "security",
+        "label": "Security issue",
+        "hint": "XSS, injection, eval, auth bypass",
+        "value": 0.02
+      },
+      {
+        "id": "bug",
+        "label": "Logic bug",
+        "hint": "Wrong result, crash, race, stale state",
+        "value": 0.11
+      },
+      {
+        "id": "secret",
+        "label": "Secret in source",
+        "hint": "Token, password, or API key in the snippet",
+        "value": 0.01
+      },
+      {
+        "id": "ready",
+        "label": "Safe to ship",
+        "hint": "Probability this snippet is fine as-is",
+        "value": 0.73
+      }
+    ],
+    "findings": [],
+    "blockCount": 1
+  }
+}

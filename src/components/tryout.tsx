@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { analyzeCode } from "@/lib/jev/analyze";
 import { CHAR_LIMIT, LANGUAGES, MIN_CHARS } from "@/lib/jev/constants";
 import { CATEGORY_LABEL } from "@/lib/jev/messages";
+import { cachedAnalysis } from "@/lib/jev/sample-cache";
 import { DEFAULT_SAMPLE, SAMPLES } from "@/lib/jev/samples";
 import type { Analysis, Finding, FindingSeverity, LanguageId } from "@/lib/jev/types";
 import { cn } from "@/lib/utils";
@@ -88,6 +89,7 @@ function Results({
   analysis,
   scanning,
   error,
+  rateLimited,
   dirty,
   activeFinding,
   onHoverFinding,
@@ -97,6 +99,7 @@ function Results({
   analysis: Analysis | null;
   scanning: boolean;
   error: string | null;
+  rateLimited: boolean;
   dirty: boolean;
   activeFinding: string | null;
   onHoverFinding: (id: string | null) => void;
@@ -115,6 +118,27 @@ function Results({
   }
 
   if (error) {
+    if (rateLimited) {
+      return (
+        <div className="flex h-full min-h-64 flex-1 flex-col justify-center gap-3 px-6 py-8">
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-subtle">
+            Playground limit
+          </p>
+          <p className="max-w-sm text-lg font-medium tracking-tight text-fg">
+            You have used the free live scores for now.
+          </p>
+          <p className="max-w-sm text-sm leading-relaxed text-muted">
+            Every live run spends real Jev credits, so the demo caps them per
+            visitor. The five samples are pre-scored and always free to run.
+          </p>
+          <div className="pt-1">
+            <Button variant="outline" size="sm" asChild>
+              <a href="#access">Want unlimited runs? Join the $10 beta</a>
+            </Button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="flex h-full min-h-64 flex-1 flex-col justify-center gap-2 px-6 py-8">
         <p className="font-medium text-fg">Could not inspect this snippet</p>
@@ -276,6 +300,7 @@ export function Tryout() {
   const [scanning, setScanning] = useState(false);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [rateLimited, setRateLimited] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [activeFinding, setActiveFinding] = useState<string | null>(null);
   const [hoveredFinding, setHoveredFinding] = useState<string | null>(null);
@@ -315,9 +340,22 @@ export function Tryout() {
     lastRunKeyRef.current = key;
 
     const gen = ++genRef.current;
+    const cached = cachedAnalysis(lang, text);
+    if (cached) {
+      // Pre-scored sample: instant result, no server call, no budget spent.
+      scanningRef.current = false;
+      setScanning(false);
+      setError(null);
+      setRateLimited(false);
+      setAnalysis(cached);
+      setDirty(false);
+      setActiveFinding(null);
+      return;
+    }
     scanningRef.current = true;
     setScanning(true);
     setError(null);
+    setRateLimited(false);
     if (!opts?.auto) {
       resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
@@ -327,6 +365,7 @@ export function Tryout() {
     setScanning(false);
     if (!result.ok) {
       setError(result.error);
+      setRateLimited(result.rateLimited === true);
       return;
     }
     setAnalysis(result.analysis);
@@ -357,6 +396,7 @@ export function Tryout() {
     setCode(text);
     setAnalysis(null);
     setError(null);
+    setRateLimited(false);
     setDirty(false);
     setActiveFinding(null);
     void run({ lang: sample.language, text });
@@ -571,6 +611,7 @@ export function Tryout() {
               analysis={analysis}
               scanning={scanning}
               error={error}
+              rateLimited={rateLimited}
               dirty={dirty}
               activeFinding={activeFinding}
               onHoverFinding={setHoveredFinding}
