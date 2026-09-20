@@ -37,6 +37,11 @@ export const Route = createRootRoute({
       </head>
       <body className="bg-bg text-fg">
         <Outlet />
+        <script
+          type="module"
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token":"e572b378081f43e28dda5e598e36d80b"}'
+        />
         <Scripts />
       </body>
     </html>
