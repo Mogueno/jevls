@@ -43,10 +43,8 @@ function Results({
   if (scanning) {
     return (
       <div className="flex h-full min-h-64 flex-1 flex-col justify-center gap-3 px-5 py-6">
-        <p className="shimmer-text font-mono text-sm">Scanning with Jev</p>
-        <p className="text-sm text-muted">
-          Compiler-speed diagnostics in one round trip. Zero prose.
-        </p>
+        <p className="shimmer-text font-mono text-sm">Rescoring…</p>
+        <p className="text-sm text-muted">One structured result. No generated explanation.</p>
       </div>
     );
   }
@@ -63,26 +61,21 @@ function Results({
   if (!analysis) {
     return (
       <div className="flex h-full min-h-64 flex-1 flex-col justify-center gap-2 px-5 py-6">
-        <p className="font-mono text-sm text-muted">Awaiting a scan</p>
+        <p className="font-mono text-sm text-muted">Start changing the sample.</p>
         <p className="max-w-sm text-sm text-subtle">
-          Paste a snippet or choose a sample above, then run Jev. You get exact
-          line diagnostics, severity ratings, and safety gauges — not a chatbot paragraph.
+          jevls will rescore it when you ask. Watch the health score and probabilities change with
+          the code.
         </p>
       </div>
     );
   }
 
-  const conf =
-    analysis.category.confidence != null
-      ? analysis.category.confidence.toFixed(2)
-      : "—";
+  const conf = analysis.category.confidence != null ? analysis.category.confidence.toFixed(2) : "—";
 
   return (
     <div className="flex min-h-64 flex-1 flex-col gap-5 px-5 py-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-mono text-xs uppercase tracking-wider text-subtle">
-          Jev output
-        </p>
+        <p className="font-mono text-xs uppercase tracking-wider text-subtle">Live signal</p>
         <p className="font-mono text-xs tabular-nums text-muted">
           {analysis.latencyMs}ms
           <span className="text-subtle"> · </span>
@@ -98,19 +91,15 @@ function Results({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-md bg-bg px-3 py-3">
-          <p className="text-xs text-subtle">Category</p>
+          <p className="text-xs text-subtle">Most likely</p>
           <p className="mt-1 text-base font-medium text-fg">
             {CATEGORY_LABEL[analysis.category.choice]}
           </p>
-          <p className="mt-1 font-mono text-xs tabular-nums text-muted">
-            conf {conf}
-          </p>
+          <p className="mt-1 font-mono text-xs tabular-nums text-muted">conf {conf}</p>
         </div>
         <div className="rounded-md bg-bg px-3 py-3">
-          <p className="text-xs text-subtle">Health</p>
-          <p className="mt-1 text-base font-medium text-fg">
-            {analysis.health.label}
-          </p>
+          <p className="text-xs text-subtle">Code health</p>
+          <p className="mt-1 text-base font-medium text-fg">{analysis.health.label}</p>
           <p className="mt-1 font-mono text-xs tabular-nums text-muted">
             {analysis.health.score.toFixed(2)} / 4
           </p>
@@ -118,6 +107,7 @@ function Results({
       </div>
 
       <div className="flex flex-col gap-3">
+        <p className="text-xs text-subtle">What Jev is watching</p>
         {analysis.gauges.map((g) => (
           <div key={g.id} className="flex flex-col gap-1.5">
             <div className="flex items-baseline justify-between gap-2">
@@ -129,27 +119,19 @@ function Results({
       </div>
 
       <div className="flex flex-col gap-2">
-        <p className="text-xs text-subtle">Findings</p>
+        <p className="text-xs text-subtle">Where to look</p>
         {analysis.findings.length === 0 ? (
           <p className="text-sm text-muted">No block-level issues.</p>
         ) : (
           <ul className="flex flex-col gap-1">
             {analysis.findings.map((f) => (
-              <li
-                key={f.id}
-                className="flex items-start gap-3 rounded-md px-1 py-2"
-              >
+              <li key={f.id} className="flex items-start gap-3 rounded-md px-1 py-2">
                 <span
-                  className={cn(
-                    "mt-1.5 size-1.5 shrink-0 rounded-full",
-                    severityClass[f.severity],
-                  )}
+                  className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", severityClass[f.severity])}
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2">
-                    <span className="text-sm font-medium text-fg">
-                      {f.title}
-                    </span>
+                    <span className="text-sm font-medium text-fg">{f.title}</span>
                     <span className="font-mono text-xs tabular-nums text-subtle">
                       L{f.startLine}
                       {f.endLine !== f.startLine ? `–${f.endLine}` : ""}
@@ -180,10 +162,7 @@ export function Tryout() {
   const tooShort = code.trim().length < MIN_CHARS;
   const canRun = !scanning && !tooShort;
 
-  const sampleLookup = useMemo(
-    () => new Map(SAMPLES.map((s) => [s.id, s])),
-    [],
-  );
+  const sampleLookup = useMemo(() => new Map(SAMPLES.map((s) => [s.id, s])), []);
 
   async function run() {
     if (!canRun) return;
@@ -218,12 +197,13 @@ export function Tryout() {
     <section id="try" className="scroll-mt-24">
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="font-mono text-xs uppercase tracking-wider text-subtle">
-            Tryout
-          </p>
+          <p className="font-mono text-xs uppercase tracking-wider text-subtle">Live demo</p>
           <h2 className="mt-1 text-xl font-medium tracking-tight text-fg">
-            Paste a snippet. Watch Jev decide.
+            Change the code. Watch the confidence move.
           </h2>
+          <p className="mt-2 text-sm text-muted">
+            The score should react while you type - not after a PR is already open.
+          </p>
         </div>
         <p className="font-mono text-xs tabular-nums text-muted">
           {code.length} / {CHAR_LIMIT}
@@ -286,17 +266,17 @@ export function Tryout() {
                 {remaining < 80 ? (
                   <span className="text-warn">{remaining} left</span>
                 ) : (
-                  "User-initiated scan · 2k cap"
+                  "Manual score · 2k cap"
                 )}
               </p>
               <Button onClick={() => void run()} disabled={!canRun} size="sm">
                 {scanning ? (
                   <>
                     <LoaderCircle className="size-3.5 animate-spin" />
-                    Scanning
+                    Rescoring
                   </>
                 ) : (
-                  "Run Jev"
+                  "Score this change"
                 )}
               </Button>
             </div>
