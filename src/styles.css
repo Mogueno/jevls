@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0c0e;
+  --color-surface: #13151a;
+  --color-raised: #1a1c22;
+  --color-fg: #eceef2;
+  --color-muted: #8b909b;
+  --color-subtle: #6a6f78;
+  --color-accent: #c5cad3;
+  --color-accent-fg: #0b0c0e;
+  --color-border: #23262c;
+  --color-gem: #e07a6a;
+  --color-danger: #c97a72;
+  --color-warn: #c4a574;
+  --color-ok: #7d9a86;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-micro: 80ms;
+  --motion-quick: 150ms;
+  --motion-fast: 250ms;
+  --motion-slow: 400ms;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-fg) 22%, transparent);
+    color: var(--color-fg);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.stagger-in {
+  animation: fade-up var(--motion-slow) var(--ease-smooth-out) both;
+}
+
+.stagger-in:nth-child(1) {
+  animation-delay: 0ms;
+}
+.stagger-in:nth-child(2) {
+  animation-delay: 80ms;
+}
+.stagger-in:nth-child(3) {
+  animation-delay: 160ms;
+}
+.stagger-in:nth-child(4) {
+  animation-delay: 240ms;
+}
+
+.shimmer-text {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-muted) 0%,
+    var(--color-fg) 50%,
+    var(--color-muted) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-sweep 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .shimmer-text {
+    animation: none;
+    color: var(--color-muted);
+    background: none;
+  }
+}
