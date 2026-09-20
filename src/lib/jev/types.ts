@@ -77,4 +77,4 @@ export type AnalyzeInput = {
 
 export type AnalyzeResult =
   | { ok: true; analysis: Analysis }
-  | { ok: false; error: string };
+  | { ok: false; error: string; rateLimited?: boolean; retryAfterSeconds?: number };

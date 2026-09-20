@@ -26,6 +26,22 @@ export const analyzeCode = createServerFn({ method: "POST" })
       return { ok: false, error: "Pick a supported language." };
     }
     const trimmed = code.slice(0, CHAR_LIMIT);
+
+    // Built-in samples never reach this handler - the client serves them from
+    // a pre-computed cache - so every call here is a live Jev API spend and
+    // counts against the per-visitor budget.
+    const { spendScoreBudget } = await import("./quota.server.ts");
+    const budget = await spendScoreBudget();
+    if (!budget.ok) {
+      return {
+        ok: false,
+        error:
+          "You have used the free live scores for now. The five samples still work - they are pre-scored.",
+        rateLimited: true,
+        retryAfterSeconds: budget.retryAfterSeconds,
+      };
+    }
+
     const { runAnalysis } = await import("./api.server.ts");
     return runAnalysis({ language: language as LanguageId, code: trimmed });
   });
