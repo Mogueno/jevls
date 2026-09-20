@@ -1,90 +1,69 @@
 #!/usr/bin/env node
 /**
- * Deploy-time database migrator (node-postgres, `pg`).
+ * Manual D1 migrator: applies ../migrations/*.sql to the D1 database named in
+ * wrangler.jsonc, in order, via `wrangler d1 execute`.
  *
- * Runs during `npm run build` — on every Vercel deploy — applying pending files
- * in ../migrations to DATABASE_URL. Each file is applied in one transaction and
- * recorded in a `_migrations` table, so it runs once and is safe to re-run.
+ * The app already applies these files itself on first request (see
+ * src/lib/db.ts), so this script is only for setting the schema up ahead of
+ * traffic. It is NOT part of `npm run build` — Workers Builds has no account
+ * credentials, and the runtime migrator covers deploys.
  *
- * The read is non-recursive, so the opt-in auth schema under migrations/auth/
- * is not applied to an app that never asked for sign-in.
- *
- * No DATABASE_URL (local / preview builds) -> skip; the PGLite fallback applies
- * the same files at startup instead (see src/lib/db.ts).
+ *   node scripts/migrate.mjs            # local D1 (.wrangler/state)
+ *   node scripts/migrate.mjs --remote   # the real remote database
  */
 import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import pg from "pg";
+import { execFileSync } from "node:child_process";
 import { pendingMigrations } from "./migration-plan.mjs";
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  console.log(
-    "[migrate] DATABASE_URL not set — skipping (the PGLite fallback migrates itself).",
-  );
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const remote = process.argv.includes("--remote");
+
+const wranglerConfig = JSON.parse(
+  (await readFile(join(root, "wrangler.jsonc"), "utf8")).replace(
+    /^\s*\/\/.*$/gm,
+    "",
+  ),
+);
+const databaseName = wranglerConfig.d1_databases?.[0]?.database_name;
+if (!databaseName) {
+  console.error("[migrate] no d1_databases entry in wrangler.jsonc");
+  process.exit(1);
+}
+
+const migrationsDir = join(root, "migrations");
+let entries;
+try {
+  entries = await readdir(migrationsDir);
+} catch {
+  console.log("[migrate] no migrations/ directory — nothing to do.");
   process.exit(0);
 }
 
-const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), "..", "migrations");
-
-async function main() {
-  let entries;
-  try {
-    entries = await readdir(migrationsDir);
-  } catch {
-    console.log("[migrate] no migrations/ directory — nothing to do.");
-    return;
-  }
-  // An app with no schema of its own must not pay for a database connection.
-  if (pendingMigrations(entries, []).length === 0) {
-    console.log("[migrate] no migrations — nothing to do.");
-    return;
-  }
-
-  const pool = new pg.Pool({ connectionString: databaseUrl, max: 1 });
-  const client = await pool.connect();
-  try {
-    await client.query(
-      "CREATE TABLE IF NOT EXISTS _migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())",
-    );
-    const applied = (await client.query("SELECT name FROM _migrations")).rows.map(
-      (r) => r.name,
-    );
-
-    let count = 0;
-    for (const { name } of pendingMigrations(entries, applied)) {
-      const text = await readFile(join(migrationsDir, name), "utf8");
-      try {
-        await client.query("BEGIN");
-        // pg's simple-query protocol runs a whole multi-statement file at once.
-        await client.query(text);
-        await client.query("INSERT INTO _migrations (name) VALUES ($1)", [name]);
-        await client.query("COMMIT");
-      } catch (err) {
-        console.error(`[migrate] error applying ${name}`);
-        try {
-          await client.query("ROLLBACK");
-        } catch {
-          // ROLLBACK fails when the connection died — keep the original error.
-        }
-        throw err;
-      }
-      console.log(`[migrate] applied ${name}`);
-      count += 1;
-    }
-    console.log(count ? `[migrate] done — ${count} migration(s) applied.` : "[migrate] up to date.");
-  } finally {
-    client.release();
-    await pool.end();
-  }
+// Migrations in this repo are idempotent DDL (`create table if not
+// exists`), so applying the full set is always safe; --remote runs are
+// deliberate operator actions.
+const pending = pendingMigrations(entries, []);
+if (pending.length === 0) {
+  console.log("[migrate] no migrations — nothing to do.");
+  process.exit(0);
 }
 
-main().catch((err) => {
-  console.error("[migrate] failed:", err?.message || err);
-  // pg errors carry the context needed to debug a bad SQL file.
-  for (const key of ["code", "detail", "hint", "position", "where"]) {
-    if (err?.[key] != null) console.error(`[migrate]   ${key}: ${err[key]}`);
-  }
-  process.exit(1);
-});
+for (const { name, path } of pending) {
+  console.log(`[migrate] applying ${name} (${remote ? "remote" : "local"})`);
+  execFileSync(
+    "npx",
+    [
+      "wrangler",
+      "d1",
+      "execute",
+      databaseName,
+      "--file",
+      join(migrationsDir, path),
+      ...(remote ? ["--remote"] : ["--local"]),
+    ],
+    { stdio: "inherit", cwd: root },
+  );
+}
+console.log("[migrate] done.");

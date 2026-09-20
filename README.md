@@ -22,10 +22,8 @@ The web app includes an interactive code analyzer playground and an early access
 
 - **Framework**: [TanStack Start](https://tanstack.com/start) with [TanStack Router](https://tanstack.com/router)
 - **UI & Styling**: [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [Radix UI](https://www.radix-ui.com/), [Lucide Icons](https://lucide.dev/)
-- **Build & Server**: [Vite](https://vitejs.dev/) with [Nitro](https://nitro.unjs.io/) (configured with the Vercel preset)
-- **Database**: Dual-mode PostgreSQL
-  - **Local Development**: Embedded [PGLite](https://pglite.dev/) (in-memory WASM Postgres) for instant, zero-configuration local runs.
-  - **Production**: PostgreSQL (e.g. Neon, Supabase, AWS RDS) via `DATABASE_URL`.
+- **Build & Server**: [Vite](https://vitejs.dev/) with the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/), deployed as a native [Cloudflare Worker](https://workers.cloudflare.com/)
+- **Database**: [Cloudflare D1](https://developers.cloudflare.com/d1/) (serverless SQLite), bound to the Worker as `DB`. No connection string or external service — production uses the remote D1 database and local dev gets a local D1 automatically.
 
 ---
 
@@ -58,11 +56,8 @@ The web app includes an interactive code analyzer playground and an early access
    ```env
    # Required for code analysis
    TYPESAFE_API_KEY=your_typesafe_api_key_here
-
-   # Optional: Database connection string for production
-   # If omitted, local in-memory PGLite will be used automatically
-   # DATABASE_URL=postgresql://user:password@host:5432/dbname?sslmode=require
    ```
+   The waitlist database (Cloudflare D1) needs no configuration — local dev gets a local D1 automatically.
 
 4. **Start the development server**:
    ```bash
@@ -77,12 +72,12 @@ The web app includes an interactive code analyzer playground and an early access
 | Command | Description |
 |---|---|
 | `npm run dev` | Starts the Vite development server on `http://localhost:8080` |
-| `npm run build` | Compiles the client, SSR, and Nitro server bundles, then runs migrations |
+| `npm run build` | Compiles the client and SSR bundles for the Worker |
 | `npm run preview` | Runs the production build locally |
 | `npm run typecheck` | Runs TypeScript compiler verification (`tsc --noEmit`) |
 | `npm run lint` | Runs ESLint across the codebase |
 | `npm run format` | Formats source files using Prettier |
-| `npm run db:migrate` | Applies pending SQL migrations to `DATABASE_URL` (if configured) |
+| `npm run db:migrate` | Applies SQL migrations to the D1 database via `wrangler d1 execute` (`--remote` for production). Optional: the app applies them itself on first request |
 
 ---
 
@@ -93,7 +88,7 @@ jevls/
 ├── migrations/          # SQL schema migrations (waitlist table)
 ├── public/              # Static assets (favicons, OpenGraph images)
 ├── scripts/
-│   ├── migrate.mjs      # Production database migrator
+│   ├── migrate.mjs      # Manual D1 migrator (wrangler d1 execute)
 │   └── migration-plan.mjs # Migration runner logic
 ├── src/
 │   ├── components/      # UI components
@@ -101,7 +96,7 @@ jevls/
 │   │   ├── waitlist-form.tsx # Waitlist signup form
 │   │   └── ui/          # Primitives (buttons, inputs)
 │   ├── lib/
-│   │   ├── db.ts        # Database client (PGLite / Neon abstraction)
+│   │   ├── db.ts        # D1 database access + auto-migrations
 │   │   ├── waitlist.ts  # Waitlist RPC server function
 │   │   └── jev/         # TypeSafe Jev API integration
 │   │       ├── api.server.ts # Server-side Jev API client
@@ -121,16 +116,13 @@ jevls/
 
 ---
 
-## Deployment (Vercel)
+## Deployment (Cloudflare Workers)
 
-This project is pre-configured to deploy on [Vercel](https://vercel.com) using Nitro's Vercel serverless preset.
+This project deploys as a native [Cloudflare Worker](https://workers.cloudflare.com/) (Workers Builds builds and deploys `main` from GitHub).
 
-1. Push your repository to GitHub.
-2. Import the repository into your Vercel dashboard.
-3. In **Settings > Environment Variables**, add:
-   - `TYPESAFE_API_KEY`: Your TypeSafe API key.
-   - `DATABASE_URL`: *(Optional)* Your PostgreSQL database connection string (e.g. Neon) for persisting waitlist signups across serverless instances.
-4. Deploy! Vercel will automatically run `npm run build` and provision the application.
+1. The D1 database is declared in `wrangler.jsonc` (`d1_databases`, binding `DB`) — the binding is applied on deploy.
+2. Set the `TYPESAFE_API_KEY` secret on the Worker (`wrangler secret put TYPESAFE_API_KEY` or the dashboard).
+3. The waitlist schema is applied automatically by the app on first request; `node scripts/migrate.mjs --remote` applies it ahead of traffic if preferred.
 
 ---
 
