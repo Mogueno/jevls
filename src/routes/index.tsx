@@ -30,25 +30,90 @@ function Home() {
         id="top"
         className="mx-auto flex max-w-5xl flex-col gap-20 px-4 py-12 sm:px-6 sm:py-16 lg:gap-28 lg:py-24"
       >
-        <section className="flex max-w-3xl flex-col gap-6">
-          <p className="stagger-in font-mono text-xs uppercase tracking-wider text-subtle">
-            Live code verification for the agent era
-          </p>
-          <h1 className="stagger-in text-4xl font-medium leading-tight tracking-tight text-fg sm:text-5xl">
-            Know where to look before you trust the code.
-          </h1>
-          <p className="stagger-in max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
-            Agents can write a lot of code before you can read it. jevls checks each change in under
-            a second and returns a health score, likely issue type, and probability - so you know
-            what deserves attention first. No chat. No paragraph to parse.
-          </p>
-          <div className="stagger-in flex flex-wrap gap-3">
-            <Button asChild>
-              <a href="#try">Watch it score code</a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="#access">Join the $10 beta</a>
-            </Button>
+        <section className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(25rem,0.92fr)] lg:gap-14">
+          <div className="flex flex-col gap-6">
+            <div className="stagger-in flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.14em] text-subtle">
+              <span className="size-1.5 rounded-[2px] bg-ok" />
+              Live code verification for the agent era
+            </div>
+            <h1 className="stagger-in max-w-3xl text-[2.7rem] font-medium leading-[1.04] tracking-[-0.035em] text-fg sm:text-6xl lg:text-[4rem]">
+              Know where to look before you trust the code.
+            </h1>
+            <p className="stagger-in max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
+              Agents can write a lot of code before you can read it. jevls checks each change in under
+              a second and shows what is wrong, where it lives, and how sure the signal is. No chat.
+              No paragraph to parse.
+            </p>
+            <div className="stagger-in flex flex-wrap gap-3">
+              <Button asChild>
+                <a href="#try">Watch it score code</a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="#access">Join the $10 beta</a>
+              </Button>
+            </div>
+          </div>
+
+          <div
+            className="stagger-in overflow-hidden border border-border bg-surface"
+            aria-label="Example jevls security diagnostic"
+          >
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-[2px] bg-danger" />
+                <span className="font-mono text-xs text-fg">auth.ts</span>
+              </div>
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-subtle">
+                Analysis complete · 184ms
+              </span>
+            </div>
+
+            <div className="bg-bg py-3 font-mono text-[12px] leading-6 sm:text-[13px]">
+              {[
+                ["01", "export function getUser(id: string) {"],
+                ["02", "  const query = `SELECT * FROM users"],
+                ["03", "    WHERE id = '${id}'`;"],
+                ["04", "  return db.exec(query);"],
+                ["05", "}"],
+              ].map(([line, code]) => {
+                const flagged = line === "02" || line === "03" || line === "04";
+                return (
+                  <div
+                    key={line}
+                    className={flagged ? "grid grid-cols-[2.75rem_1fr] bg-danger/10" : "grid grid-cols-[2.75rem_1fr]"}
+                  >
+                    <span className="relative border-r border-border pr-3 text-right tabular-nums text-subtle">
+                      {line}
+                      {line === "04" ? (
+                        <span className="absolute right-[-4px] top-[9px] size-[7px] rounded-[2px] bg-danger" />
+                      ) : null}
+                    </span>
+                    <span className="overflow-hidden px-4 whitespace-pre text-muted">
+                      {code}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="border-t border-border px-4 py-4 sm:px-5 sm:py-5">
+              <div className="flex items-start gap-3">
+                <span className="mt-1.5 size-2.5 shrink-0 rounded-[3px] bg-danger" />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-danger">
+                      Security
+                    </span>
+                    <span className="font-mono text-[10px] tabular-nums text-muted">Lines 02–04</span>
+                  </div>
+                  <p className="mt-1.5 font-semibold leading-snug text-fg">User input reaches a SQL query</p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted">
+                    Interpolating the id allows crafted input to change the query. Use a parameterized statement.
+                  </p>
+                  <p className="mt-2 font-mono text-[10px] text-subtle">High confidence · 94%</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
