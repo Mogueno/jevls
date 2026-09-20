@@ -1,4 +1,5 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { Analytics } from "@vercel/analytics/react";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "jevls";
@@ -37,6 +38,7 @@ export const Route = createRootRoute({
       </head>
       <body className="bg-bg text-fg">
         <Outlet />
+        <Analytics />
         <Scripts />
       </body>
     </html>
