@@ -10,7 +10,7 @@ export type Sample = {
 export const SAMPLES: Sample[] = [
   {
     id: "xss",
-    title: "Profile render",
+    title: "XSS render",
     language: "javascript",
     code: `export function renderProfile(user) {
   const root = document.getElementById("main");
@@ -28,8 +28,8 @@ export const SAMPLES: Sample[] = [
 `,
   },
   {
-    id: "sql",
-    title: "Login query",
+    id: "sqli",
+    title: "SQL injection",
     language: "python",
     code: `def login(db, username, password):
     q = "SELECT * FROM users WHERE name = '" + username + "' AND pw = '" + password + "'"
@@ -39,8 +39,31 @@ export const SAMPLES: Sample[] = [
 `,
   },
   {
+    id: "secret",
+    title: "Hardcoded secret",
+    language: "javascript",
+    code: `// deploy.mjs - pushes the build to prod
+import AWS from "aws-sdk";
+
+AWS.config.update({
+  accessKeyId: "AKIAIOSFODNN7EXAMPLE",
+  secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+  region: "eu-central-1",
+});
+
+const dbPassword = "hunter2-prod";
+
+export async function deploy(bundle) {
+  const s3 = new AWS.S3();
+  await s3
+    .putObject({ Bucket: "prod-releases", Key: "latest.zip", Body: bundle })
+    .promise();
+}
+`,
+  },
+  {
     id: "stale",
-    title: "Cart total",
+    title: "Logic bug",
     language: "typescript",
     code: `import { useEffect, useState } from "react";
 
@@ -61,7 +84,7 @@ export function Cart({ items }: { items: number[] }) {
   },
   {
     id: "clean",
-    title: "Clamp",
+    title: "Clean",
     language: "typescript",
     code: `export function clamp(n: number, min: number, max: number): number {
   if (!Number.isFinite(n) || !Number.isFinite(min) || !Number.isFinite(max)) {
