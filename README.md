@@ -137,3 +137,5 @@ This project is pre-configured to deploy on [Vercel](https://vercel.com) using N
 ## License
 
 MIT
+
+<!-- Cloudflare preview builds enabled. -->
