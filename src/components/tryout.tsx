@@ -71,6 +71,19 @@ function Meter({ value }: { value: number }) {
   );
 }
 
+function lineLabel(finding: Finding) {
+  return finding.startLine === finding.endLine
+    ? `Line ${finding.startLine}`
+    : `Lines ${finding.startLine}–${finding.endLine}`;
+}
+
+function confidenceLabel(value: number | null) {
+  if (value == null) return "Confidence unavailable";
+  const percent = Math.round(value * 100);
+  const strength = value >= 0.75 ? "High" : value >= 0.5 ? "Medium" : "Low";
+  return `${strength} confidence · ${percent}%`;
+}
+
 function Results({
   analysis,
   scanning,
@@ -92,98 +105,80 @@ function Results({
 }) {
   if (scanning && !analysis) {
     return (
-      <div className="flex h-full min-h-64 flex-1 flex-col justify-center gap-3 px-5 py-6">
-        <p className="shimmer-text font-mono text-sm">Scoring…</p>
-        <p className="text-sm text-muted">One structured result. No generated explanation.</p>
+      <div className="flex h-full min-h-64 flex-1 flex-col justify-center gap-3 px-6 py-8">
+        <p className="shimmer-text font-mono text-sm">Reading the code…</p>
+        <p className="max-w-sm text-sm leading-relaxed text-muted">
+          Checking each block and mapping anything suspicious back to its lines.
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex h-full min-h-64 flex-1 flex-col justify-center gap-2 px-5 py-6">
-        <p className="text-sm text-fg">{error}</p>
-        <p className="text-sm text-muted">Check the snippet and run again.</p>
+      <div className="flex h-full min-h-64 flex-1 flex-col justify-center gap-2 px-6 py-8">
+        <p className="font-medium text-fg">Could not inspect this snippet</p>
+        <p className="text-sm leading-relaxed text-muted">{error}</p>
       </div>
     );
   }
 
   if (!analysis) {
     return (
-      <div className="flex h-full min-h-64 flex-1 flex-col justify-center gap-2 px-5 py-6">
-        <p className="font-mono text-sm text-muted">Pick a sample or start typing.</p>
-        <p className="max-w-sm text-sm text-subtle">
-          jevls scores the snippet and paints its findings straight onto the editor gutter - like
-          the always-on version would in your IDE.
+      <div className="flex h-full min-h-64 flex-1 flex-col justify-center gap-3 px-6 py-8">
+        <p className="font-mono text-xs uppercase tracking-[0.14em] text-subtle">Diagnostics</p>
+        <p className="max-w-sm text-lg font-medium tracking-tight text-fg">
+          Pick a sample to see what needs attention.
+        </p>
+        <p className="max-w-sm text-sm leading-relaxed text-muted">
+          Findings will show what is wrong, which lines are involved, and how strong the signal is.
         </p>
       </div>
     );
   }
 
-  const conf = analysis.category.confidence != null ? analysis.category.confidence.toFixed(2) : "—";
+  const conf = analysis.category.confidence;
+  const hasFindings = analysis.findings.length > 0;
+  const verdict = hasFindings
+    ? `${analysis.findings.length} ${analysis.findings.length === 1 ? "issue" : "issues"} need attention`
+    : "No issues found in this snippet";
+  const verdictTone = hasFindings ? "text-danger" : "text-ok";
 
   return (
     <div
       className={cn(
-        "flex min-h-64 flex-1 flex-col gap-5 px-5 py-5 transition-opacity duration-150",
-        scanning && "opacity-60",
+        "flex min-h-64 flex-1 flex-col transition-opacity duration-150",
+        scanning && "opacity-65",
       )}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-mono text-xs uppercase tracking-wider text-subtle">
-          {scanning ? "Rescoring…" : dirty ? "Edited - rescoring on pause" : "Live signal"}
-        </p>
-        <p className="font-mono text-xs tabular-nums text-muted">
-          {analysis.latencyMs}ms
-          <span className="text-subtle"> · </span>
-          {analysis.model}
-          {analysis.inputTokens > 0 ? (
-            <>
-              <span className="text-subtle"> · </span>
-              {analysis.inputTokens} tok
-            </>
-          ) : null}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-md bg-bg px-3 py-3">
-          <p className="text-xs text-subtle">Most likely</p>
-          <p className="mt-1 text-base font-medium text-fg">
-            {CATEGORY_LABEL[analysis.category.choice]}
+      <header className="border-b border-border px-5 py-5 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-subtle">
+            {scanning ? "Updating diagnostics…" : dirty ? "Changed · update pending" : "Analysis complete"}
           </p>
-          <p className="mt-1 font-mono text-xs tabular-nums text-muted">conf {conf}</p>
-        </div>
-        <div className="rounded-md bg-bg px-3 py-3">
-          <p className="text-xs text-subtle">Code health</p>
-          <p className="mt-1 text-base font-medium text-fg">{analysis.health.label}</p>
-          <p className="mt-1 font-mono text-xs tabular-nums text-muted">
-            {analysis.health.score.toFixed(2)} / 4
+          <p className="font-mono text-[11px] tabular-nums text-subtle">
+            {analysis.latencyMs}ms · {analysis.model}
           </p>
         </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <p className="text-xs text-subtle">What Jev is watching</p>
-        {analysis.gauges.map((g) => (
-          <div key={g.id} className="flex flex-col gap-1.5">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-sm text-fg">{g.label}</span>
-            </div>
-            <Meter value={g.value} />
+        <div className="mt-4 flex items-start gap-3">
+          <span className={cn("mt-2 size-2.5 shrink-0 rounded-[3px]", hasFindings ? "bg-danger" : "bg-ok")} />
+          <div>
+            <h3 className={cn("text-xl font-semibold leading-tight tracking-tight sm:text-2xl", verdictTone)}>
+              {verdict}
+            </h3>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              {hasFindings
+                ? "Start with the first diagnostic below. Selecting one highlights the matching code."
+                : "The model did not detect a meaningful defect in the blocks it checked."}
+            </p>
           </div>
-        ))}
-      </div>
+        </div>
+      </header>
 
-      <div className="flex flex-col gap-2">
-        <p className="text-xs text-subtle">Where to look</p>
-        {analysis.findings.length === 0 ? (
-          <p className="text-sm text-muted">
-            No block-level issues. This is what the safe-to-ship case looks like.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-1">
-            {analysis.findings.map((f) => (
+      <section className="flex-1 px-3 py-3 sm:px-4" aria-label="Code diagnostics">
+        {hasFindings ? (
+          <ol className="flex flex-col gap-2">
+            {analysis.findings.map((f, index) => (
               <li
                 key={f.id}
                 ref={(el) => {
@@ -199,36 +194,77 @@ function Results({
                   onBlur={() => onHoverFinding(null)}
                   onClick={() => onSelectFinding(f.id)}
                   className={cn(
-                    "flex w-full items-start gap-3 rounded-md px-2 py-2 text-left transition-colors duration-150 hover:bg-bg",
-                    activeFinding === f.id && "bg-bg ring-1 ring-fg/20",
+                    "group w-full border-l-2 border-border bg-bg/35 px-4 py-3.5 text-left transition-colors duration-150 hover:border-muted hover:bg-bg/70",
+                    activeFinding === f.id && "border-danger bg-bg ring-1 ring-inset ring-fg/10",
                   )}
                 >
-                  <span
-                    className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", severityDot[f.severity])}
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-baseline gap-x-2">
-                      <span className="text-sm font-medium text-fg">{f.title}</span>
-                      <span className="font-mono text-xs tabular-nums text-subtle">
-                        L{f.startLine}
-                        {f.endLine !== f.startLine ? `–${f.endLine}` : ""}
-                      </span>
-                      {f.confidence != null ? (
-                        <span
-                          className={cn("font-mono text-xs tabular-nums", severityText[f.severity])}
-                        >
-                          {f.confidence.toFixed(2)}
-                        </span>
-                      ) : null}
+                  <span className="flex items-start gap-3">
+                    <span className="mt-0.5 font-mono text-xs tabular-nums text-subtle">
+                      {String(index + 1).padStart(2, "0")}
                     </span>
-                    <span className="mt-0.5 block text-sm text-muted">{f.detail}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className={cn("font-mono text-[11px] font-medium uppercase tracking-[0.12em]", severityText[f.severity])}>
+                          {CATEGORY_LABEL[f.category]}
+                        </span>
+                        <span className="font-mono text-[11px] tabular-nums text-muted">
+                          {lineLabel(f)}
+                        </span>
+                      </span>
+                      <span className="mt-1.5 block text-base font-semibold leading-snug text-fg">
+                        {f.title}
+                      </span>
+                      <span className="mt-1 block text-sm leading-relaxed text-muted">{f.detail}</span>
+                      <span className="mt-2 flex items-center gap-2 font-mono text-[11px] text-subtle">
+                        <span className={cn("size-1.5 rounded-full", severityDot[f.severity])} />
+                        {confidenceLabel(f.confidence)}
+                      </span>
+                    </span>
                   </span>
                 </button>
               </li>
             ))}
-          </ul>
+          </ol>
+        ) : (
+          <div className="border-l-2 border-ok bg-bg/35 px-4 py-4">
+            <p className="text-sm font-medium text-fg">Nothing to inspect here</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              Try another sample or change the code. A clean result should stay quiet.
+            </p>
+          </div>
         )}
-      </div>
+      </section>
+
+      <details className="group border-t border-border px-5 py-4 sm:px-6">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm text-muted hover:text-fg">
+          <span>Signal details</span>
+          <span className="font-mono text-xs text-subtle group-open:hidden">show</span>
+          <span className="hidden font-mono text-xs text-subtle group-open:inline">hide</span>
+        </summary>
+        <div className="mt-4 grid gap-5 sm:grid-cols-2">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-subtle">Classification</p>
+            <p className="mt-1 text-sm font-medium text-fg">{CATEGORY_LABEL[analysis.category.choice]}</p>
+            <p className="mt-0.5 font-mono text-xs text-muted">{confidenceLabel(conf)}</p>
+          </div>
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-subtle">Severity</p>
+            <p className="mt-1 text-sm font-medium text-fg">{analysis.health.label}</p>
+            <p className="mt-0.5 font-mono text-xs text-muted">{analysis.health.score.toFixed(2)} / 4</p>
+          </div>
+          <div className="sm:col-span-2">
+            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-subtle">Model signals</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {analysis.gauges.map((g) => (
+                <div key={g.id} className="flex flex-col gap-1.5">
+                  <span className="text-xs text-muted">{g.label}</span>
+                  <Meter value={g.value} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </details>
     </div>
   );
 }
@@ -404,11 +440,11 @@ export function Tryout() {
         <div>
           <p className="font-mono text-xs uppercase tracking-wider text-subtle">Live demo</p>
           <h2 className="mt-1 text-xl font-medium tracking-tight text-fg">
-            Change the code. Watch the confidence move.
+            See what is wrong. Go straight to the line.
           </h2>
-          <p className="mt-2 text-sm text-muted">
-            Findings land on the gutter like they would in your editor - hover a marker for the why,
-            click it to jump to the detail.
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+            Run a sample or edit the code. The answer leads with the diagnostics; model scores stay
+            out of the way until you ask for them.
           </p>
         </div>
         <p className="font-mono text-xs tabular-nums text-muted">
@@ -416,9 +452,9 @@ export function Tryout() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-surface p-2">
-        <div className="grid gap-2 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-stretch">
-          <div className="flex min-h-80 min-w-0 flex-col rounded-lg bg-bg lg:h-full">
+      <div className="overflow-hidden border border-border bg-surface">
+        <div className="grid lg:grid-cols-[minmax(0,1.08fr)_minmax(23rem,0.92fr)] lg:items-stretch">
+          <div className="flex min-h-80 min-w-0 flex-col bg-bg lg:h-full lg:border-r lg:border-border">
             <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
               <label className="sr-only" htmlFor="lang">
                 Language
@@ -529,7 +565,7 @@ export function Tryout() {
 
           <div
             ref={resultsRef}
-            className="flex min-h-80 min-w-0 flex-col overflow-auto rounded-lg bg-raised lg:h-full"
+            className="flex min-h-80 min-w-0 flex-col overflow-auto border-t border-border bg-raised lg:h-full lg:border-t-0"
           >
             <Results
               analysis={analysis}
