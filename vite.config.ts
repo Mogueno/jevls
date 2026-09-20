@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { nitro } from "nitro/vite";
+import { cloudflare } from "@cloudflare/vite-plugin";
 import { isMigrationFile } from "./scripts/migration-plan.mjs";
 
 /** The files `src/lib/db.ts` globs — same directory, same non-recursive scope. */
@@ -43,7 +43,7 @@ function pgliteBootstrapPlugin(): Plugin {
   };
 }
 
-export default defineConfig(({ command, isPreview }) => ({
+export default defineConfig(() => ({
   server: {
     host: "0.0.0.0",
     port: 8080,
@@ -56,14 +56,8 @@ export default defineConfig(({ command, isPreview }) => ({
   plugins: [
     pgliteBootstrapPlugin(),
     tailwindcss(),
+    cloudflare({ viteEnvironment: { name: "ssr" } }),
     tanstackStart(),
-    ...(command === "build" || isPreview
-      ? [
-          nitro({
-            preset: "vercel",
-          }),
-        ]
-      : []),
     viteReact(),
   ],
 }));

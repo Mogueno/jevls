@@ -3,7 +3,7 @@ node_modules/
 .pnp
 .pnp.js
 
-# Build and Vercel outputs
+# Build and deployment outputs
 .vercel
 .output
 dist/
@@ -37,3 +37,6 @@ Thumbs.db
 # Testing & Screenshots
 screenshots/
 coverage/
+
+# Cloudflare local state
+.wrangler/
