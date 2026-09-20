@@ -26,15 +26,16 @@ export const joinWaitlist = createServerFn({ method: "POST" })
     const email = normalizeEmail(raw);
     if (!email) return { ok: false, error: "That email does not look valid." };
 
-    const { getSql } = await import("@/lib/db");
-    const sql = await getSql();
-    const rows = await sql<{ id: number }>`
-      insert into waitlist (email) values (${email})
-      on conflict (email) do nothing
-      returning id
-    `;
+    const { getDb } = await import("@/lib/db");
+    const db = await getDb();
+    const res = await db
+      .prepare(
+        "insert into waitlist (email) values (?) on conflict (email) do nothing",
+      )
+      .bind(email)
+      .run();
     return {
       ok: true,
-      status: rows.length > 0 ? "joined" : "already",
+      status: res.meta.changes > 0 ? "joined" : "already",
     };
   });

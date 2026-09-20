@@ -1,5 +1,5 @@
 create table if not exists waitlist (
-  id         serial primary key,
+  id         integer primary key autoincrement,
   email      text not null unique,
-  created_at timestamptz not null default now()
+  created_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );

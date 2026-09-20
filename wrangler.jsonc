@@ -6,5 +6,12 @@
   "main": "@tanstack/react-start/server-entry",
   "observability": {
     "enabled": true
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jevls-waitlist",
+      "database_id": "d0952459-77c4-4036-a226-1eca050e8216"
+    }
+  ]
 }
